@@ -14,7 +14,14 @@ import {
     updateDoc,
     where,
 } from "firebase/firestore";
-import { db } from "./firebaseConfig";
+
+import {
+    createUserWithEmailAndPassword,
+    sendPasswordResetEmail,
+    signInWithEmailAndPassword,
+} from "firebase/auth";
+
+import { auth, db } from "./firebaseConfig";
 
 type JsonBody = Record<string, any>;
 
@@ -46,6 +53,25 @@ const COLLECTIONS = {
 
 const jsonResponse = (payload: any, status = 200) =>
     new FirebaseApiResponse(payload, status);
+
+const getAuthErrorMessage = (error: any) => {
+    switch (error?.code) {
+        case "auth/email-already-in-use":
+            return "Email sudah terpakai!";
+        case "auth/invalid-email":
+            return "Format email tidak valid.";
+        case "auth/weak-password":
+            return "Password minimal 6 karakter.";
+        case "auth/operation-not-allowed":
+            return "Provider Email/Password belum aktif di Firebase Auth.";
+        case "auth/user-not-found":
+        case "auth/wrong-password":
+        case "auth/invalid-credential":
+            return "Email atau password salah!";
+        default:
+            return error?.message ?? "Proses autentikasi gagal.";
+    }
+};
 
 const getBody = async (init?: RequestInit): Promise<JsonBody> => {
     if (!init?.body) return {};
@@ -150,7 +176,9 @@ const getLogins = async () => {
 const getCarts = async () => {
     const result = await getDocs(collection(db, COLLECTIONS.cart));
     const products = await getProducts();
-    const productMap = new Map(products.map((product) => [product.id, product]));
+    const productMap = new Map(
+        products.map((product) => [product.id, product]),
+    );
 
     return result.docs.map((snap) => {
         const cart = normalizeDoc(snap);
@@ -196,20 +224,26 @@ const handleLogin = async (method: string, paths: string[], body: JsonBody) => {
     }
 
     if (method === "POST" && paths.length === 1) {
+        try {
+            await signInWithEmailAndPassword(
+                auth,
+                String(body.email ?? ""),
+                String(body.password ?? ""),
+            );
+        } catch (error) {
+            return jsonResponse({ message: getAuthErrorMessage(error) }, 401);
+        }
+
         const userSnap = await findUserByEmail(body.email);
 
         if (!userSnap) {
             return jsonResponse(
-                { message: "Email yang anda masukan salah" },
+                { message: "Data akun tidak ditemukan." },
                 401,
             );
         }
 
         const user = normalizeDoc(userSnap);
-
-        if (user.password !== body.password) {
-            return jsonResponse({ message: "password salah" }, 401);
-        }
 
         const id = await nextId(COLLECTIONS.logins);
         await addDoc(collection(db, COLLECTIONS.logins), {
@@ -269,12 +303,24 @@ const handleUsers = async (method: string, paths: string[], body: JsonBody) => {
         }
 
         const id = await nextId(COLLECTIONS.users);
+        let credential;
+
+        try {
+            credential = await createUserWithEmailAndPassword(
+                auth,
+                String(body.email),
+                String(body.password),
+            );
+        } catch (error) {
+            return jsonResponse({ msg: getAuthErrorMessage(error) }, 400);
+        }
+
         await addDoc(collection(db, COLLECTIONS.users), {
             id,
+            uid: credential.user.uid,
             email: body.email,
             username: body.username,
             role: body.role ?? "user",
-            password: body.password,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         });
@@ -288,7 +334,8 @@ const handleUsers = async (method: string, paths: string[], body: JsonBody) => {
             Number(paths[1]),
         );
 
-        if (!userSnap) return jsonResponse({ msg: "Data tidak tersedia!" }, 404);
+        if (!userSnap)
+            return jsonResponse({ msg: "Data tidak tersedia!" }, 404);
 
         if (method === "GET") {
             return jsonResponse(normalizeDoc(userSnap));
@@ -325,13 +372,16 @@ const handleUsers = async (method: string, paths: string[], body: JsonBody) => {
 const handleForgotPassword = async (method: string, body: JsonBody) => {
     if (method !== "POST") return null;
 
-    const userSnap = await findUserByEmail(body.email);
-
-    if (!userSnap) {
+    // const userSnap = await findUserByEmail(body.email);
+    try {
+        await sendPasswordResetEmail(auth, String(body.email ?? ""));
+        return jsonResponse(
+            { message: "Email ganti password telah dikirim" },
+            201,
+        );
+    } catch {
         return jsonResponse({ message: "Email yang anda masukan salah" }, 401);
     }
-
-    return jsonResponse(normalizeDoc(userSnap));
 };
 
 const handleProducts = async (
@@ -366,7 +416,8 @@ const handleProducts = async (
             Number(paths[1]),
         );
 
-        if (!productSnap) return jsonResponse({ msg: "Data tidak tersedia!" }, 404);
+        if (!productSnap)
+            return jsonResponse({ msg: "Data tidak tersedia!" }, 404);
 
         if (method === "GET") return jsonResponse(normalizeDoc(productSnap));
 
@@ -473,10 +524,16 @@ const handleCarts = async (method: string, paths: string[], body: JsonBody) => {
     }
 
     if (paths.length === 2) {
-        const cartSnap = await findDocByNumericId(COLLECTIONS.cart, Number(paths[1]));
+        const cartSnap = await findDocByNumericId(
+            COLLECTIONS.cart,
+            Number(paths[1]),
+        );
 
         if (!cartSnap) {
-            return jsonResponse({ msg: "Data keranjang tidak ditemukan." }, 404);
+            return jsonResponse(
+                { msg: "Data keranjang tidak ditemukan." },
+                404,
+            );
         }
 
         if (method === "PATCH") {
@@ -539,7 +596,9 @@ const createOrGetDraftTransaction = async (body: JsonBody) => {
         updatedAt: serverTimestamp(),
     });
 
-    return jsonResponse({ response: await normalizeTransaksi(await getDoc(docRef)) });
+    return jsonResponse({
+        response: await normalizeTransaksi(await getDoc(docRef)),
+    });
 };
 
 const checkoutTransaction = async (id: number, body: JsonBody) => {
@@ -561,7 +620,10 @@ const checkoutTransaction = async (id: number, body: JsonBody) => {
         const qty = Number(item.qty);
 
         if (!item.id || !qty || qty < 1) {
-            return jsonResponse({ msg: "Qty item transaksi tidak valid." }, 400);
+            return jsonResponse(
+                { msg: "Qty item transaksi tidak valid." },
+                400,
+            );
         }
 
         const cart = transaksi.keranjangs.find(
@@ -577,7 +639,10 @@ const checkoutTransaction = async (id: number, body: JsonBody) => {
     }
 
     for (const item of cartItems) {
-        const cartSnap = await findDocByNumericId(COLLECTIONS.cart, Number(item.id));
+        const cartSnap = await findDocByNumericId(
+            COLLECTIONS.cart,
+            Number(item.id),
+        );
         if (cartSnap) {
             await updateDoc(cartSnap.ref, {
                 qty: Number(item.qty),
@@ -587,10 +652,13 @@ const checkoutTransaction = async (id: number, body: JsonBody) => {
     }
 
     const refreshed = await normalizeTransaksi(transaksiSnap);
-    const totalHarga = refreshed.keranjangs.reduce((total: number, item: any) => {
-        const harga = Number(item.product?.harga_product ?? 0);
-        return total + harga * Number(item.qty);
-    }, 0);
+    const totalHarga = refreshed.keranjangs.reduce(
+        (total: number, item: any) => {
+            const harga = Number(item.product?.harga_product ?? 0);
+            return total + harga * Number(item.qty);
+        },
+        0,
+    );
     const cash = Number(body.cash);
 
     if (!cash || cash < totalHarga) {
@@ -717,11 +785,21 @@ export const firebaseFetch = async (
         } else if (resource === "cart") {
             response = await handleCarts(method, paths, body);
         } else if (resource === "transaksi") {
-            response = await handleTransactions(method, paths, url.searchParams, body);
+            response = await handleTransactions(
+                method,
+                paths,
+                url.searchParams,
+                body,
+            );
         }
 
-        return response ?? jsonResponse({ msg: "Endpoint tidak ditemukan." }, 404);
+        return (
+            response ?? jsonResponse({ msg: "Endpoint tidak ditemukan." }, 404)
+        );
     } catch (error: any) {
-        return jsonResponse({ msg: error.message ?? "Firebase API error." }, 400);
+        return jsonResponse(
+            { msg: error.message ?? "Firebase API error." },
+            400,
+        );
     }
 };

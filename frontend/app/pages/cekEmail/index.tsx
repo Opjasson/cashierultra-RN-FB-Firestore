@@ -4,6 +4,8 @@ import { NavigationProp } from "@react-navigation/native";
 import React, { useState } from "react";
 import {
     Image,
+    KeyboardAvoidingView,
+    Platform,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -23,27 +25,22 @@ const CekEmail: React.FC<props> = ({ navigation }) => {
 
     const handleCek = async () => {
         if (email) {
-            const response = await fetch(
-                apiUrl("/forgotPass"),
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                    }),
+            const response = await fetch(apiUrl("/forgotPass"), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
                 },
-            );
+                body: JSON.stringify({
+                    email: email,
+                }),
+            });
             const json = await response.json();
-            // console.log(json);
-            if (json.message) {
+            console.log("pesanne",json);
+            if (json.message != "Email ganti password telah dikirim") {
                 setError(json.message);
             } else {
-                alert("Email terdaftar!");
-                navigation.navigate("ChangePass", {
-                    user: json,
-                });
+                alert("Email ganti password telah dikirim");
+                navigation.navigate("LoginPage");
             }
 
             // if (JSON.stringify(response.status) === "401") {
@@ -57,50 +54,67 @@ const CekEmail: React.FC<props> = ({ navigation }) => {
     };
 
     return (
-        <ScrollView>
-            <StatusBar barStyle={"light-content"} backgroundColor={"#1F1F1F"} />
-            <View style={styles.containerForm}>
-                <View style={styles.headLogin}>
-                    <View style={styles.headLogin}>
-                        <Text style={styles.headLoginText1}>
-                            Cek Email User
-                        </Text>
-                        <Image
-                            style={{ height: 180, width: 180 }}
-                            source={system}
-                        />
-                    </View>
-                    <Text style={styles.headLoginText2}>
-                        Klinik Kecantikan Ultra Glow
-                    </Text>
-                    <Text style={styles.garisHead}></Text>
-                </View>
-                <Text style={styles.textLabel}>Email</Text>
-                <TextInput
-                    style={{
-                        borderWidth: 1,
-                        marginBottom: 5,
-                        borderRadius: 5,
-                    }}
-                    keyboardType="email-address"
-                    placeholder="Masukan email anda"
-                    onChangeText={(text) => setEmail(text)}
+        <KeyboardAvoidingView
+            style={styles.screen}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+            <StatusBar
+                    barStyle={"light-content"}
+                    backgroundColor={"#1F1F1F"}
                 />
+            <ScrollView contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled">
+                
+                <View style={styles.containerForm}>
+                    <View style={styles.headLogin}>
+                        <View style={styles.headLogin}>
+                            <Text style={styles.headLoginText1}>
+                                Cek Email User
+                            </Text>
+                            <Image
+                                style={{ height: 180, width: 180 }}
+                                source={system}
+                            />
+                        </View>
+                        <Text style={styles.headLoginText2}>
+                            Klinik Kecantikan Ultra Glow
+                        </Text>
+                        <Text style={styles.garisHead}></Text>
+                    </View>
+                    <Text style={styles.textLabel}>Email</Text>
+                    <TextInput
+                        style={{
+                            borderWidth: 1,
+                            marginBottom: 5,
+                            borderRadius: 5,
+                        }}
+                        keyboardType="email-address"
+                        placeholder="Masukan email anda"
+                        onChangeText={(text) => setEmail(text)}
+                    />
 
-                <Text style={error ? styles.errorMsg : styles.hidden}>
-                    {error}
-                </Text>
-            </View>
-            {/* End Form */}
+                    <Text style={error ? styles.errorMsg : styles.hidden}>
+                        {error}
+                    </Text>
+                </View>
+                {/* End Form */}
 
-            <TouchableOpacity style={styles.button} onPress={handleCek}>
-                <Text style={{ color: "white" }}>Cek Email</Text>
-            </TouchableOpacity>
-        </ScrollView>
+                <TouchableOpacity style={styles.button} onPress={handleCek}>
+                    <Text style={{ color: "white" }}>Cek Email</Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 
 const styles = StyleSheet.create({
+    screen: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        paddingBottom: 32,
+    },
     containerForm: {
         paddingHorizontal: 15,
         paddingTop: 150,

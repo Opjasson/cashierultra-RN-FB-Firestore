@@ -46,9 +46,10 @@ const RegisterPage: React.FC<props> = ({ navigation }) => {
                     confPassword: confPassword,
                 }),
             });
+            const json = await response.json();
 
-            if (JSON.stringify(response.status) === "400") {
-                setError("Password sesuaikan Confirm Password!");
+            if (!response.ok) {
+                setError(json.msg ?? "Registrasi gagal.");
             } else {
                 alert("Berhasil membuat akun");
                 navigation.navigate("LoginPage");
