@@ -78,7 +78,12 @@ const HistoryPesanan: React.FC<props> = ({ navigation }) => {
     const getUserId = async () => {
         const response = await fetch(apiUrl("/login"));
         const data = await response.json();
-        setIdLogin(Object.values(data)[0]?.id);
+        const loginInfo = Object.values(data)[0] as
+            | { id?: number; userId?: number }
+            | undefined;
+
+        setIdLogin(loginInfo?.id);
+        setId(loginInfo?.userId);
     };
 
     const getAkunLoggin = async () => {
@@ -86,9 +91,11 @@ const HistoryPesanan: React.FC<props> = ({ navigation }) => {
 
         const response = await fetch(apiUrl(`/user/${id}`));
         const user = await response.json();
-        // console.log("login",user);
+        console.log(user);
+        
         if (user != null) {
             setUser(user.role);
+            setUsername(user.username);
         }
     };
 
@@ -111,8 +118,15 @@ const HistoryPesanan: React.FC<props> = ({ navigation }) => {
     };
 
     const getHistorys = async () => {
+        if (!user) return;
+        if (user === "user" && !username) return;
+
         try {
-            const response = await fetch(apiUrl("/transaksi"));
+            const endpoint =
+                user === "user"
+                    ? `/transaksi?namaPelanggan=${encodeURIComponent(username!)}`
+                    : "/transaksi";
+            const response = await fetch(apiUrl(endpoint));
             const history = (await response.json()) as {
                 response: {
                     keranjangs: [
@@ -135,9 +149,13 @@ const HistoryPesanan: React.FC<props> = ({ navigation }) => {
                     catatanTambahan: string;
                 }[];
             };
-            const dataArray = history.response;
-            // console.log(dataArray[0].keranjangs);
-
+            const dataArray =
+                user === "user"
+                    ? history.response.filter(
+                          (item) => item.namaPelanggan === username,
+                      )
+                    : history.response;
+            
             setHistoryTransaksi(dataArray);
         } catch (error) {
             console.log(error);
@@ -146,7 +164,7 @@ const HistoryPesanan: React.FC<props> = ({ navigation }) => {
 
     useEffect(() => {
         getHistorys();
-    }, []);
+    }, [user, username]);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -173,7 +191,9 @@ const HistoryPesanan: React.FC<props> = ({ navigation }) => {
             <ScrollView>
                 {[...historyTransaksi]
                     .sort(
-                        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+                        (a, b) =>
+                            new Date(b.createdAt).getTime() -
+                            new Date(a.createdAt).getTime(),
                     )
                     .map((item, index) => (
                         <TouchableOpacity
@@ -240,7 +260,7 @@ const HistoryPesanan: React.FC<props> = ({ navigation }) => {
                                             marginBottom: 10,
                                         }}
                                     >
-                                        Nama Kasir :{" "}
+                                      { user != "kasir" ? "Nama Pelanggan :" : "Nama Kasir :"}  {" "}
                                         {item.namaPelanggan.toUpperCase()}
                                     </Text>
 
