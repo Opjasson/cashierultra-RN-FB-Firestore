@@ -4,7 +4,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Octicons from "@expo/vector-icons/Octicons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import { SafeAreaView } from "react-native-safe-area-context"
+import { SafeAreaView } from "react-native-safe-area-context";
 import Entypo from "@expo/vector-icons/Entypo";
 
 interface props {
@@ -32,25 +32,54 @@ const DrawerContent: React.FC<props> = ({
         <SafeAreaView style={styles.animatedBox}>
             <View style={styles.sidebarHead}>
                 <Text style={styles.sidebarTitle}>Ultra Glow Clinic</Text>
-                <Text style={{ color: "white", fontSize: 12, borderBottomColor: "white", borderBottomWidth: 2 }}>Jln Raya, Kalimati, Kec. Adiwerna, Kabupaten Tegal, Jawa Tengah</Text>
+                <Text
+                    style={{
+                        color: "white",
+                        fontSize: 12,
+                        borderBottomColor: "white",
+                        borderBottomWidth: 2,
+                    }}
+                >
+                    Jln Raya, Kalimati, Kec. Adiwerna, Kabupaten Tegal, Jawa
+                    Tengah
+                </Text>
 
-                 <TouchableOpacity
+                <TouchableOpacity
                     activeOpacity={0.5}
-                    style={[styles.tutupSidebar, {backgroundColor: "white", width: 120, padding: 4, borderRadius: 8}]}
-                    onPress={onPress4}>
+                    style={[
+                        styles.tutupSidebar,
+                        {
+                            backgroundColor: "white",
+                            width: 120,
+                            padding: 4,
+                            borderRadius: 8,
+                        },
+                    ]}
+                    onPress={onPress4}
+                >
                     <Text
                         style={{
                             fontSize: 18,
                             fontWeight: "bold",
                             color: "red",
-                           
-                        }}>
+                        }}
+                    >
                         🔙 Logout
                     </Text>
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.sidebarMain}>
+            <View
+                style={{
+                    display: "flex",
+                    gap: 8,
+                    flexDirection: "column",
+                    justifyContent: status ? "flex-start" : "space-between",
+                    height: "50%",
+                    marginTop: 20,
+                    padding: 10,
+                }}
+            >
                 <TouchableOpacity
                     onPress={onPress1}
                     style={{
@@ -58,9 +87,12 @@ const DrawerContent: React.FC<props> = ({
                         backgroundColor: "#ebf4ba",
                         gap: 5,
                         padding: 6,
-                        borderRadius: 8
-                    }}>
-                    <Text style={styles.sidebarMenu}>🛒 Keranjang Belanjaku</Text>
+                        borderRadius: 8,
+                    }}
+                >
+                    <Text style={styles.sidebarMenu}>
+                        🛒 Keranjang Belanjaku
+                    </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -70,8 +102,9 @@ const DrawerContent: React.FC<props> = ({
                         backgroundColor: "#ebf4ba",
                         gap: 5,
                         padding: 6,
-                        borderRadius: 8
-                    }}>
+                        borderRadius: 8,
+                    }}
+                >
                     <Text style={styles.sidebarMenu}>🏠 Home</Text>
                 </TouchableOpacity>
 
@@ -83,7 +116,8 @@ const DrawerContent: React.FC<props> = ({
                         gap: 5,
                         padding: 6,
                         borderRadius: 8,
-                    }}>
+                    }}
+                >
                     <Text style={styles.sidebarMenu}>📊 Riwayat Orderku</Text>
                 </TouchableOpacity>
 
@@ -96,9 +130,9 @@ const DrawerContent: React.FC<props> = ({
                         padding: 6,
                         borderRadius: 8,
                         display: status ? "none" : "flex",
-                    }}>
+                    }}
+                >
                     <Text style={styles.sidebarMenu}>🧰 Atur Productku</Text>
-                    
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -110,15 +144,16 @@ const DrawerContent: React.FC<props> = ({
                         padding: 6,
                         borderRadius: 8,
                         display: status ? "none" : "flex",
-                    }}>
+                    }}
+                >
                     <Text style={styles.sidebarMenu}>🗒️ Laporanku</Text>
-                
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     activeOpacity={0.5}
                     style={styles.tutupSidebar}
-                    onPress={toggleOpen}>
+                    onPress={toggleOpen}
+                >
                     <Ionicons
                         name="arrow-back-circle-outline"
                         size={30}
@@ -148,15 +183,7 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         color: "white",
     },
-    sidebarMain: {
-        display: "flex",
-        gap: 8,
-        flexDirection: "column",
-        justifyContent: "space-between",
-        height: "50%",
-        marginTop: 20,
-        padding: 10,
-    },
+    sidebarMain: {},
     sidebarMenu: {
         fontSize: 20,
         fontWeight: "400",
