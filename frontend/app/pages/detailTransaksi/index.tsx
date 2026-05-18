@@ -20,6 +20,7 @@ interface props {
 }
 
 const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
+    const [user, setUser] = useState<string>();
     const [id, setId] = useState<number>();
     const [uuid, setUuid] = useState<string>();
     const [date, setDate] = useState(new Date());
@@ -41,14 +42,16 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
     const [createdAt, setCreatedAt] = useState<string>();
     const [pelanggan, setPelanggan] = useState<string>();
     const [cash, setCash] = useState<number>();
+    const [catatanTambahan, setCatatanTambahan] = useState<string>();
 
     const routeUuid = route.params?.uuid;
 
     const getTransaksiByUUID = async () => {
-        const response = await fetch(
-            apiUrl(`/transaksi/${routeUuid}`),
-        );
+        const response = await fetch(apiUrl(`/transaksi/${routeUuid}`));
         const dataJson = await response.json();
+        console.log("kie", dataJson);
+
+        setCatatanTambahan(dataJson.catatanTambahan);
         setCart(dataJson.keranjangs);
         setUuid(dataJson.uuid);
         setTotalHarga(dataJson.totalHarga);
@@ -99,6 +102,22 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
 
         return sum;
     };
+
+    const getAkunLoggin = async () => {
+        if (!id) return;
+
+        const response = await fetch(apiUrl(`/user/${id}`));
+        const user = await response.json();
+        console.log(user);
+
+        if (user != null) {
+            setUser(user.role);
+        }
+    };
+
+    useEffect(() => {
+        getAkunLoggin();
+    }, [id]);
 
     const handleCetak = () => {
         const rows = cart
@@ -193,17 +212,22 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
                 <View style={styles.titleRow}>
                     <View style={styles.content}>
                         <Text style={styles.title}>
-                            Nama Kasir : {pelanggan?.toUpperCase()}
+                            {user != "kasir"
+                                ? "Nama Kasir :"
+                                : "Nama Pelanggan :"}{" "}
+                            {pelanggan?.toUpperCase()}
                         </Text>
                         <Text style={styles.location}>Id Pesanan : {uuid}</Text>
 
                         <Text>Daftar Pesanan :</Text>
                         {cart.map((name, idx) => (
                             <Text key={idx} style={styles.name}>
-                                {name.product?.nama_product}{" "}
-                                x {name.qty}
+                                {name.product?.nama_product} x {name.qty}
                             </Text>
                         ))}
+
+                        <Text>Catatan Tambahan :</Text>
+                        <Text>{catatanTambahan?.toString()}</Text>
 
                         <Text style={{ marginTop: 7, borderTopWidth: 2 }}>
                             Cash :
