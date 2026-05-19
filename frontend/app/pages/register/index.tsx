@@ -42,7 +42,7 @@ const RegisterPage: React.FC<props> = ({ navigation }) => {
                     email: email,
                     username: username,
                     password: password,
-                    role: "user",
+                    role: "kasir",
                     confPassword: confPassword,
                 }),
             });

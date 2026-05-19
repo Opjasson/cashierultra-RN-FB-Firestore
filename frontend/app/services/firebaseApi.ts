@@ -661,15 +661,15 @@ const checkoutTransaction = async (id: number, body: JsonBody) => {
     );
     const cash = Number(body.cash);
 
-    if (!cash || cash < totalHarga) {
-        return jsonResponse(
-            {
-                msg: "Nominal cash kurang dari total transaksi.",
-                totalHarga,
-            },
-            400,
-        );
-    }
+    // if (!cash || cash < totalHarga) {
+    //     return jsonResponse(
+    //         {
+    //             msg: "Nominal cash kurang dari total transaksi.",
+    //             totalHarga,
+    //         },
+    //         400,
+    //     );
+    // }
 
     await updateDoc(transaksiSnap.ref, {
         totalHarga,

@@ -7,6 +7,7 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import React, { useEffect, useState } from "react";
 import {
+    Image,
     ScrollView,
     StyleSheet,
     Text,
@@ -21,6 +22,7 @@ interface props {
 
 const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
     const [user, setUser] = useState<string>();
+    const [idLogin, setIdLogin] = useState<number>();
     const [id, setId] = useState<number>();
     const [uuid, setUuid] = useState<string>();
     const [date, setDate] = useState(new Date());
@@ -43,6 +45,7 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
     const [pelanggan, setPelanggan] = useState<string>();
     const [cash, setCash] = useState<number>();
     const [catatanTambahan, setCatatanTambahan] = useState<string>();
+    const [buktiBayar, setBuktiBayar] = useState<string>();
 
     const routeUuid = route.params?.uuid;
 
@@ -59,6 +62,7 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
         setCash(dataJson.cash);
         setCreatedAt(dataJson.createdAt);
         setId(dataJson.id);
+        setBuktiBayar(dataJson.buktiBayar);
     };
 
     useEffect(() => {
@@ -103,6 +107,18 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
         return sum;
     };
 
+    // Get Data Login --------------------------
+    const getUserId = async () => {
+        const response = await fetch(apiUrl("/login"));
+        const data = await response.json();
+        const loginInfo = Object.values(data)[0] as
+            | { id?: number; userId?: number }
+            | undefined;
+
+        setIdLogin(loginInfo?.id);
+        setId(loginInfo?.userId);
+    };
+
     const getAkunLoggin = async () => {
         if (!id) return;
 
@@ -114,6 +130,10 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
             setUser(user.role);
         }
     };
+
+    useEffect(() => {
+        getUserId();
+    }, []);
 
     useEffect(() => {
         getAkunLoggin();
@@ -152,7 +172,7 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
         </div>
         <div class="line"></div>
         <div class="row"><span>${dateNow}</span></div>
-        <div class="row"><span>Pelanggan: ${pelanggan}</span></div>
+        <div class="row"><span>Nama: ${pelanggan}</span></div>
         <div>No.xxxx</div>
         <div class="line"></div>
         
@@ -212,9 +232,7 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
                 <View style={styles.titleRow}>
                     <View style={styles.content}>
                         <Text style={styles.title}>
-                            {user != "kasir"
-                                ? "Nama Kasir :"
-                                : "Nama Pelanggan :"}{" "}
+                            Nama :  
                             {pelanggan?.toUpperCase()}
                         </Text>
                         <Text style={styles.location}>Id Pesanan : {uuid}</Text>
@@ -230,6 +248,18 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
                         <Text>{catatanTambahan?.toString()}</Text>
 
                         <Text style={{ marginTop: 7, borderTopWidth: 2 }}>
+                            Bukti Transfer :
+                        </Text>
+                        {buktiBayar != "CASH" ? (
+                            <Image
+                                source={{ uri: buktiBayar }}
+                                style={styles.buktiImage}
+                            />
+                        ) : (
+                            <Text>{buktiBayar}</Text>
+                        )}
+
+                        <Text style={{ marginTop: 7, borderTopWidth: 2 }}>
                             Cash :
                         </Text>
                         <Text style={styles.location}>
@@ -241,7 +271,7 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
                         </Text>
                         <Text style={styles.location}>
                             Rp.
-                            {cash !== null
+                            {cash !== 0
                                 ? (cash - totalHarga).toLocaleString()
                                 : "-0"}
                         </Text>
@@ -324,6 +354,13 @@ const styles = StyleSheet.create({
         marginHorizontal: "auto",
         borderRadius: 8,
         elevation: 5,
+    },
+    buktiImage: {
+        width: "100%",
+        height: 220,
+        borderRadius: 8,
+        marginTop: 8,
+        marginBottom: 8,
     },
     container: { flex: 1, backgroundColor: "#f4f4f4" },
     card: {

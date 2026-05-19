@@ -80,11 +80,11 @@ const UbahProduct: React.FC<props> = ({ navigation, route }) => {
         });
 
         data2.append("upload_preset", "Cloudinary_my_first_time"); // dari cloudinary
-        data2.append("cloud_name", "dqcnnluof");
+        data2.append("cloud_name", "dmqwrh8nv");
 
         try {
             const res = await fetch(
-                "https://api.cloudinary.com/v1_1/dqcnnluof/image/upload",
+                "https://api.cloudinary.com/v1_1/dmqwrh8nv/image/upload",
                 {
                     method: "POST",
                     body: data2,

@@ -91,7 +91,7 @@ const HistoryPesanan: React.FC<props> = ({ navigation }) => {
 
         const response = await fetch(apiUrl(`/user/${id}`));
         const user = await response.json();
-        console.log(user);
+        console.log("halooo",user);
         
         if (user != null) {
             setUser(user.role);
@@ -260,7 +260,7 @@ const HistoryPesanan: React.FC<props> = ({ navigation }) => {
                                             marginBottom: 10,
                                         }}
                                     >
-                                      { user != "kasir" ? "Nama Pelanggan :" : "Nama Kasir :"}  {" "}
+                                      { item.namaPelanggan != "Pamela" ? "Nama Pelanggan :" : "Nama Kasir :"}  {" "}
                                         {item.namaPelanggan.toUpperCase()}
                                     </Text>
 

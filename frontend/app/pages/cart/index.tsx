@@ -4,9 +4,11 @@ import { AntDesign } from "@expo/vector-icons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { NavigationProp, useFocusEffect } from "@react-navigation/native";
-import React, { useMemo, useState } from "react";
+import * as ImagePicker from "expo-image-picker";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     Image,
+    Platform,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -53,10 +55,26 @@ const Cart: React.FC<props> = ({ navigation }) => {
     const [dataShow, setDataShow] = useState<CartItem[]>([]);
     const [cashInput, setCashInput] = useState<string>("");
     const [catatan, setCatatan] = useState<string>("");
+    const [buktiBayar, setBuktiBayar] = useState<string>();
+    const [buktiBayarUrl, setBuktiBayarUrl] = useState<string>();
+    const [isUploadingBukti, setIsUploadingBukti] = useState(false);
 
     const toggleOpen = () => {
         setOpen((prev) => !prev);
     };
+
+    useEffect(() => {
+        (async () => {
+            if (Platform.OS !== "web") {
+                const { status } =
+                    await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+                if (status !== "granted") {
+                    alert("Permission to access gallery is required!");
+                }
+            }
+        })();
+    }, []);
 
     const getDraftTransaksi = async (currentUsername?: string) => {
         if (!currentUsername) return;
@@ -122,6 +140,63 @@ const Cart: React.FC<props> = ({ navigation }) => {
     const cash = Number(cashInput || 0);
     const kembalian = cash > totalHarga ? cash - totalHarga : 0;
 
+    const uploadBuktiBayarToCloudinary = async (imageUri: string) => {
+        const formData = new FormData();
+        const fileName = imageUri.split("/").pop() ?? "bukti-transfer.jpg";
+        const fileType = fileName.split(".").pop() ?? "jpg";
+
+        formData.append("file", {
+            uri: imageUri,
+            name: fileName,
+            type: `image/${fileType}`,
+        } as any);
+
+        formData.append("upload_preset", "Cloudinary_my_first_time");
+        formData.append("cloud_name", "dmqwrh8nv");
+
+        try {
+            setIsUploadingBukti(true);
+            const response = await fetch(
+                "https://api.cloudinary.com/v1_1/dmqwrh8nv/image/upload",
+                {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                },
+            );
+            const json = await response.json();
+
+            if (!response.ok || !json.secure_url) {
+                alert("Upload bukti transfer gagal.");
+                return;
+            }
+
+            setBuktiBayarUrl(json.secure_url);
+        } catch (error) {
+            console.log(error);
+            alert("Terjadi error saat upload bukti transfer.");
+        } finally {
+            setIsUploadingBukti(false);
+        }
+    };
+
+    const pickBuktiBayar = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            const imageUri = result.assets[0].uri;
+            setBuktiBayar(imageUri);
+            setBuktiBayarUrl(undefined);
+            await uploadBuktiBayarToCloudinary(imageUri);
+        }
+    };
+
     const handleDeleteCart = async (cartId: number) => {
         const response = await fetch(apiUrl(`/cart/${cartId}`), {
             method: "DELETE",
@@ -150,10 +225,17 @@ const Cart: React.FC<props> = ({ navigation }) => {
             return;
         }
 
-        if (!cash || cash < totalHarga) {
+
+        if (!buktiBayar && cash < totalHarga) {
             alert("Nominal cash belum cukup.");
             return;
         }
+
+        if (isUploadingBukti) {
+            alert("Bukti transfer masih diupload.");
+            return;
+        }
+
 
         try {
             const response = await fetch(
@@ -166,7 +248,7 @@ const Cart: React.FC<props> = ({ navigation }) => {
                     body: JSON.stringify({
                         cash,
                         catatanTambahan: catatan || null,
-                        buktiBayar: "CASH",
+                        buktiBayar: buktiBayarUrl,
                         status: true,
                         items: dataShow.map((item) => ({
                             id: item.id,
@@ -187,6 +269,8 @@ const Cart: React.FC<props> = ({ navigation }) => {
             setDataShow([]);
             setCashInput("");
             setCatatan("");
+            setBuktiBayar(undefined);
+            setBuktiBayarUrl(undefined);
             navigation.navigate("HistoryPesanan");
         } catch (error) {
             console.log(error);
@@ -342,8 +426,39 @@ const Cart: React.FC<props> = ({ navigation }) => {
                         onChangeText={setCashInput}
                     />
 
+                    <Text style={styles.textLabel}>Bukti Transfer</Text>
+                    {buktiBayar ? (
+                        <Image
+                            source={{ uri: buktiBayar }}
+                            style={styles.buktiImage}
+                        />
+                    ) : null}
+
+                    <TouchableOpacity
+                        style={styles.uploadButton}
+                        onPress={pickBuktiBayar}
+                        disabled={isUploadingBukti}
+                    >
+                        <Ionicons
+                            name="camera-outline"
+                            size={24}
+                            color="black"
+                        />
+                        <Text style={styles.uploadButtonText}>
+                            {isUploadingBukti
+                                ? "Mengupload..."
+                                : buktiBayarUrl
+                                  ? "Ganti Bukti Transfer"
+                                  : "Pilih Bukti Transfer"}
+                        </Text>
+                    </TouchableOpacity>
+
                     <View style={styles.summaryRow}>
-                        <Text style={styles.totalLabel}>Kasir</Text>
+                        <Text style={styles.totalLabel}>
+                            {user !== "user"
+                                ? "Kasir :"
+                                : "Pelanggan :"}{" "}
+                        </Text>
                         <Text style={styles.totalValue}>{username || "-"}</Text>
                     </View>
 
@@ -365,10 +480,11 @@ const Cart: React.FC<props> = ({ navigation }) => {
                 <TouchableOpacity
                     style={[
                         styles.buyButton,
-                        dataShow.length === 0 && styles.buyButtonDisabled,
+                        (dataShow.length === 0 || isUploadingBukti) &&
+                            styles.buyButtonDisabled,
                     ]}
                     onPress={() => buyHandle()}
-                    disabled={dataShow.length === 0}
+                    disabled={dataShow.length === 0 || isUploadingBukti}
                 >
                     <Text style={styles.buyText}>Checkout</Text>
                 </TouchableOpacity>
@@ -403,6 +519,29 @@ const styles = StyleSheet.create({
         marginTop: 10,
         paddingHorizontal: 12,
         paddingVertical: 10,
+    },
+    buktiImage: {
+        width: "100%",
+        height: 180,
+        borderRadius: 10,
+        marginTop: 6,
+        marginBottom: 10,
+    },
+    uploadButton: {
+        backgroundColor: "#fff",
+        width: "100%",
+        padding: 10,
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 9,
+        borderWidth: 1,
+        borderColor: "gray",
+        flexDirection: "row",
+        gap: 8,
+    },
+    uploadButtonText: {
+        color: "black",
+        fontWeight: "500",
     },
     container: {
         paddingHorizontal: 20,
