@@ -7,7 +7,6 @@ import {
     getDocs,
     increment,
     limit,
-    orderBy,
     query,
     runTransaction,
     serverTimestamp,
@@ -152,6 +151,13 @@ const findUserByEmail = async (email: string) => {
     return result.docs[0] ?? null;
 };
 
+const findUserByUid = async (uid: string) => {
+    const result = await getDocs(
+        query(collection(db, COLLECTIONS.users), where("uid", "==", uid), limit(1)),
+    );
+    return result.docs[0] ?? null;
+};
+
 const getProducts = async () => {
     const result = await getDocs(collection(db, COLLECTIONS.products));
     return result.docs
@@ -167,11 +173,27 @@ const getUsers = async () => {
         .sort((a, b) => Number(a.id) - Number(b.id));
 };
 
-const getLogins = async () => {
+const getCurrentUserLogins = async () => {
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) return [];
+
+    const userSnap = await findUserByUid(currentUser.uid);
+
+    if (!userSnap) return [];
+
+    const user = normalizeDoc(userSnap);
     const result = await getDocs(
-        query(collection(db, COLLECTIONS.logins), orderBy("createdAt", "desc")),
+        query(collection(db, COLLECTIONS.logins), where("userId", "==", user.id)),
     );
-    return result.docs.map(normalizeDoc);
+
+    return result.docs
+        .map(normalizeDoc)
+        .sort(
+            (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime(),
+        );
 };
 
 const getCarts = async () => {
@@ -221,7 +243,7 @@ const getTransactions = async () => {
 
 const handleLogin = async (method: string, paths: string[], body: JsonBody) => {
     if (method === "GET" && paths.length === 1) {
-        return jsonResponse(await getLogins());
+        return jsonResponse(await getCurrentUserLogins());
     }
 
     if (method === "POST" && paths.length === 1) {
