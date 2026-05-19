@@ -44,6 +44,7 @@ const RegisterPage: React.FC<props> = ({ navigation }) => {
                     password: password,
                     role: "kasir",
                     confPassword: confPassword,
+                    logoutAfterRegister: true,
                 }),
             });
             const json = await response.json();

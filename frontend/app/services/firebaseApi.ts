@@ -19,6 +19,7 @@ import {
     createUserWithEmailAndPassword,
     sendPasswordResetEmail,
     signInWithEmailAndPassword,
+    signOut,
 } from "firebase/auth";
 
 import { auth, db } from "./firebaseConfig";
@@ -270,10 +271,12 @@ const handleLogin = async (method: string, paths: string[], body: JsonBody) => {
         );
 
         if (!loginSnap) {
+            await signOut(auth);
             return jsonResponse({ msg: "Data tidak ditemukan!" }, 404);
         }
 
         await deleteDoc(loginSnap.ref);
+        await signOut(auth);
         return jsonResponse({ msg: "Data berhasil dihapus!" });
     }
 
@@ -324,6 +327,10 @@ const handleUsers = async (method: string, paths: string[], body: JsonBody) => {
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         });
+
+        if (body.logoutAfterRegister) {
+            await signOut(auth);
+        }
 
         return jsonResponse({ msg: "Register berhasil" }, 201);
     }

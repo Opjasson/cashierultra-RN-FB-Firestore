@@ -2,7 +2,7 @@ import { apiUrl } from "@/app/config/api";
 import { doctor } from "@/app/inventory/images";
 import { MaterialIcons } from "@expo/vector-icons";
 import { NavigationProp, useFocusEffect } from "@react-navigation/native";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
     Alert,
     BackHandler,
@@ -28,24 +28,6 @@ const LoginPage: React.FC<props> = ({ navigation }) => {
     const [error, setError] = useState<string>();
     const [showPassword, setShowPassword] = useState(false);
 
-    const [data, setData] = useState([]);
-
-    const getUserId = async () => {
-        try {
-            const response = await fetch(apiUrl("/login"));
-            const datas = await response.json();
-            setData(datas); // update state
-        } catch (error) {
-            setError("Email atau Password tidak terdaftar");
-            // console.error("Fetch error:", error);
-        }
-    };
-
-    // 1. Ambil data saat komponen pertama kali muncul
-    useEffect(() => {
-        getUserId();
-    }, []);
-
     // Handle jika user klik tombol kembali handphone
     useFocusEffect(
         React.useCallback(() => {
@@ -68,13 +50,6 @@ const LoginPage: React.FC<props> = ({ navigation }) => {
     );
     // end handle tombol kembali
 
-    // 2. Pantau perubahan pada `data`
-    useEffect(() => {
-        if (data.length > 0) {
-            navigation.navigate("Home"); // Arahkan ke MainApp jika sudah login
-        }
-    }, [data]);
-
     const handleLogin = async () => {
         if (email && password) {
             const response = await fetch(apiUrl("/login"), {
@@ -88,12 +63,11 @@ const LoginPage: React.FC<props> = ({ navigation }) => {
                 }),
             });
             const json = await response.json();
-            // console.log(json.response.id);
 
-            if (JSON.stringify(response.status) === "401") {
-                setError("Email atau password salah!");
+            if (!response.ok) {
+                setError(json.message ?? "Email atau password salah!");
             } else {
-                navigation.navigate("Home", { data: json.response });
+                setError(undefined);
             }
         } else {
             setError("Isi email dan password!");
