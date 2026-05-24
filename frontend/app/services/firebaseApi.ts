@@ -153,9 +153,36 @@ const findUserByEmail = async (email: string) => {
 
 const findUserByUid = async (uid: string) => {
     const result = await getDocs(
-        query(collection(db, COLLECTIONS.users), where("uid", "==", uid), limit(1)),
+        query(
+            collection(db, COLLECTIONS.users),
+            where("uid", "==", uid),
+            limit(1),
+        ),
     );
     return result.docs[0] ?? null;
+};
+
+const findCurrentUserDoc = async () => {
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) return null;
+
+    const userByUid = await findUserByUid(currentUser.uid);
+
+    if (userByUid) return userByUid;
+
+    if (!currentUser.email) return null;
+
+    const userByEmail = await findUserByEmail(currentUser.email);
+
+    if (userByEmail) {
+        await updateDoc(userByEmail.ref, {
+            uid: currentUser.uid,
+            updatedAt: serverTimestamp(),
+        });
+    }
+
+    return userByEmail;
 };
 
 const getProducts = async () => {
@@ -174,17 +201,16 @@ const getUsers = async () => {
 };
 
 const getCurrentUserLogins = async () => {
-    const currentUser = auth.currentUser;
-
-    if (!currentUser) return [];
-
-    const userSnap = await findUserByUid(currentUser.uid);
+    const userSnap = await findCurrentUserDoc();
 
     if (!userSnap) return [];
 
     const user = normalizeDoc(userSnap);
     const result = await getDocs(
-        query(collection(db, COLLECTIONS.logins), where("userId", "==", user.id)),
+        query(
+            collection(db, COLLECTIONS.logins),
+            where("userId", "==", user.id),
+        ),
     );
 
     return result.docs
@@ -264,6 +290,13 @@ const handleLogin = async (method: string, paths: string[], body: JsonBody) => {
                 { message: "Data akun tidak ditemukan." },
                 401,
             );
+        }
+
+        if (auth.currentUser && userSnap.data().uid !== auth.currentUser.uid) {
+            await updateDoc(userSnap.ref, {
+                uid: auth.currentUser.uid,
+                updatedAt: serverTimestamp(),
+            });
         }
 
         const user = normalizeDoc(userSnap);
@@ -621,6 +654,8 @@ const createOrGetDraftTransaction = async (body: JsonBody) => {
         catatanTambahan: null,
         status: null,
         cash: null,
+        whastapp: null,
+        alamat: null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     });
@@ -689,6 +724,8 @@ const checkoutTransaction = async (id: number, body: JsonBody) => {
         0,
     );
     const cash = Number(body.cash);
+    const whastapp = Number(body.whastapp);
+    const alamat = String(body.alamat);
 
     // if (!cash || cash < totalHarga) {
     //     return jsonResponse(
@@ -705,6 +742,8 @@ const checkoutTransaction = async (id: number, body: JsonBody) => {
         buktiBayar: body.buktiBayar ?? "CASH",
         catatanTambahan: body.catatanTambahan ?? null,
         cash,
+        whastapp,
+        alamat,
         status: body.status ?? true,
         updatedAt: serverTimestamp(),
     });

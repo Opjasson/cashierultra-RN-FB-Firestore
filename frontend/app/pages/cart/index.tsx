@@ -58,6 +58,8 @@ const Cart: React.FC<props> = ({ navigation }) => {
     const [buktiBayar, setBuktiBayar] = useState<string>();
     const [buktiBayarUrl, setBuktiBayarUrl] = useState<string>();
     const [isUploadingBukti, setIsUploadingBukti] = useState(false);
+    const [whastapp, setWhastapp] = useState("");
+    const [alamat, setAlamat] = useState("");
 
     const toggleOpen = () => {
         setOpen((prev) => !prev);
@@ -225,7 +227,6 @@ const Cart: React.FC<props> = ({ navigation }) => {
             return;
         }
 
-
         if (!buktiBayar && cash < totalHarga) {
             alert("Nominal cash belum cukup.");
             return;
@@ -235,7 +236,6 @@ const Cart: React.FC<props> = ({ navigation }) => {
             alert("Bukti transfer masih diupload.");
             return;
         }
-
 
         try {
             const response = await fetch(
@@ -249,6 +249,8 @@ const Cart: React.FC<props> = ({ navigation }) => {
                         cash,
                         catatanTambahan: catatan || null,
                         buktiBayar: buktiBayarUrl,
+                        whastapp: whastapp,
+                        alamat: alamat,
                         status: true,
                         items: dataShow.map((item) => ({
                             id: item.id,
@@ -269,6 +271,7 @@ const Cart: React.FC<props> = ({ navigation }) => {
             setDataShow([]);
             setCashInput("");
             setCatatan("");
+            setWhastapp("");
             setBuktiBayar(undefined);
             setBuktiBayarUrl(undefined);
             navigation.navigate("HistoryPesanan");
@@ -337,10 +340,12 @@ const Cart: React.FC<props> = ({ navigation }) => {
 
                 {dataShow.length === 0 ? (
                     <View style={styles.emptyState}>
-                        <Text style={styles.emptyTitle}>Belum ada item aktif</Text>
+                        <Text style={styles.emptyTitle}>
+                            Belum ada item aktif
+                        </Text>
                         <Text style={styles.emptyText}>
-                            Mulai transaksi dari halaman utama lalu tambahkan produk
-                            ke keranjang.
+                            Mulai transaksi dari halaman utama lalu tambahkan
+                            produk ke keranjang.
                         </Text>
                     </View>
                 ) : null}
@@ -426,6 +431,10 @@ const Cart: React.FC<props> = ({ navigation }) => {
                         onChangeText={setCashInput}
                     />
 
+                    <Text style={styles.textLabel}>Metode Pembayaran :</Text>
+                    <Text style={{backgroundColor: "#c3c3f7"}}>DANA {"(+62 817-7022-0529)"}</Text>
+                    <Text style={{backgroundColor: "#c3c3f7"}}>Bank BRI {"(544366678, Owner Ultra Glow)"}</Text>
+
                     <Text style={styles.textLabel}>Bukti Transfer</Text>
                     {buktiBayar ? (
                         <Image
@@ -453,11 +462,23 @@ const Cart: React.FC<props> = ({ navigation }) => {
                         </Text>
                     </TouchableOpacity>
 
+                    <TextInput
+                        style={styles.cashInput}
+                        keyboardType="number-pad"
+                        placeholder="Whastapp"
+                        onChangeText={setWhastapp}
+                    />
+
+                    <TextInput
+                        style={styles.cashInput}
+                        keyboardType="default"
+                        placeholder="Alamat"
+                        onChangeText={setAlamat}
+                    />
+
                     <View style={styles.summaryRow}>
                         <Text style={styles.totalLabel}>
-                            {user !== "user"
-                                ? "Kasir :"
-                                : "Pelanggan :"}{" "}
+                            {user !== "user" ? "Kasir :" : "Pelanggan :"}{" "}
                         </Text>
                         <Text style={styles.totalValue}>{username || "-"}</Text>
                     </View>

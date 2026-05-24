@@ -46,6 +46,8 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
     const [cash, setCash] = useState<number>();
     const [catatanTambahan, setCatatanTambahan] = useState<string>();
     const [buktiBayar, setBuktiBayar] = useState<string>();
+    const [whastapp, setWhastApp] = useState<string>();
+    const [alamat, setAlamat] = useState<string>();
 
     const routeUuid = route.params?.uuid;
 
@@ -63,6 +65,8 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
         setCreatedAt(dataJson.createdAt);
         setId(dataJson.id);
         setBuktiBayar(dataJson.buktiBayar);
+        setWhastApp(dataJson.whastapp)
+        setAlamat(dataJson.alamat)
     };
 
     useEffect(() => {
@@ -182,9 +186,9 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
               <div class="line"></div>
               <div class="row"><span>Jumlah barang</span><span>Qty : ${handleQTyAll()}</span></div>
               <div class="row bold"><span>Total</span><span>Rp ${totalHarga?.toLocaleString()}</span></div>
-              <div class="row"><span>Bayar (Cash)</span><span>Rp ${cash?.toLocaleString()}</span></div>
+              <div class="row"><span>Bayar (Cash)</span><span>Rp ${buktiBayar == "" ? cash?.toLocaleString() : "TRANSFER"}</span></div>
               <div class="row"><span>Kembali</span><span>Rp ${
-                  cash! - totalHarga!
+                buktiBayar == "" ? cash! - totalHarga! : 0
               }</span></div>
         
               <div class="center"><p>Terima kasih telah berbelanja</p></div>
@@ -246,6 +250,9 @@ const DetailTransaksi: React.FC<props> = ({ route, navigation }) => {
 
                         <Text>Catatan Tambahan :</Text>
                         <Text>{catatanTambahan?.toString()}</Text>
+
+                        <Text>Whastapp: +62 {whastapp?.toString()}</Text>
+                        <Text>Alamat: {alamat?.toString()}</Text>
 
                         <Text style={{ marginTop: 7, borderTopWidth: 2 }}>
                             Bukti Transfer :
