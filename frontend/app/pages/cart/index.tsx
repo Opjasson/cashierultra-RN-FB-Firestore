@@ -417,6 +417,7 @@ const Cart: React.FC<props> = ({ navigation }) => {
                     <TextInput
                         style={styles.textArea}
                         placeholder="Catatan Tambahan"
+                        placeholderTextColor="black"
                         onChangeText={(text) => setCatatan(text)}
                         value={catatan}
                         multiline={true}
@@ -427,6 +428,7 @@ const Cart: React.FC<props> = ({ navigation }) => {
                         style={styles.cashInput}
                         keyboardType="number-pad"
                         placeholder="Cash"
+                        placeholderTextColor="black"
                         value={cashInput}
                         onChangeText={setCashInput}
                     />
@@ -466,6 +468,7 @@ const Cart: React.FC<props> = ({ navigation }) => {
                         style={styles.cashInput}
                         keyboardType="number-pad"
                         placeholder="Whastapp"
+                        placeholderTextColor="black"
                         onChangeText={setWhastapp}
                     />
 
@@ -473,6 +476,7 @@ const Cart: React.FC<props> = ({ navigation }) => {
                         style={styles.cashInput}
                         keyboardType="default"
                         placeholder="Alamat"
+                        placeholderTextColor="black"
                         onChangeText={setAlamat}
                     />
 
@@ -532,6 +536,7 @@ const styles = StyleSheet.create({
         padding: 10,
         fontSize: 16,
         borderRadius: 10,
+        color: "black"
     },
     cashInput: {
         borderWidth: 1,
@@ -540,6 +545,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
         paddingHorizontal: 12,
         paddingVertical: 10,
+        color: "black"
     },
     buktiImage: {
         width: "100%",

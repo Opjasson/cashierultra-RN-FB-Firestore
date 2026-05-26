@@ -87,9 +87,11 @@ const CekEmail: React.FC<props> = ({ navigation }) => {
                             borderWidth: 1,
                             marginBottom: 5,
                             borderRadius: 5,
+                            color: "black"
                         }}
                         keyboardType="email-address"
                         placeholder="Masukan email anda"
+                        placeholderTextColor="black"
                         onChangeText={(text) => setEmail(text)}
                     />
 

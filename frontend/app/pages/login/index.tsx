@@ -104,6 +104,7 @@ const LoginPage: React.FC<props> = ({ navigation }) => {
                             style={styles.input}
                             keyboardType="email-address"
                             placeholder="Masukan email anda"
+                            placeholderTextColor="black"
                             onChangeText={(text) => setEmail(text)}
                         />
                     </View>
@@ -118,6 +119,7 @@ const LoginPage: React.FC<props> = ({ navigation }) => {
                         <TextInput
                             style={styles.input}
                             placeholder="Password"
+                            placeholderTextColor="black"
                             secureTextEntry={!showPassword}
                             value={password}
                             onChangeText={setPassword}
@@ -169,6 +171,7 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         height: 40,
+        color: "black"
     },
     inputGroup: {
         flexDirection: "row",

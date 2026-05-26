@@ -94,6 +94,7 @@ const RegisterPage: React.FC<props> = ({ navigation }) => {
                             <TextInput
                                 style={styles.input}
                                 placeholder="Username"
+                                placeholderTextColor="black"
                                 value={username}
                                 onChangeText={setUsername}
                             />
@@ -109,6 +110,7 @@ const RegisterPage: React.FC<props> = ({ navigation }) => {
                             <TextInput
                                 style={styles.input}
                                 placeholder="Email"
+                                placeholderTextColor="black"
                                 value={email}
                                 onChangeText={setEmail}
                             />
@@ -124,6 +126,7 @@ const RegisterPage: React.FC<props> = ({ navigation }) => {
                             <TextInput
                                 style={styles.input}
                                 placeholder="Password"
+                                placeholderTextColor="black"
                                 secureTextEntry={!showPassword}
                                 value={password}
                                 onChangeText={setPassword}
@@ -153,6 +156,7 @@ const RegisterPage: React.FC<props> = ({ navigation }) => {
                             <TextInput
                                 style={styles.input}
                                 placeholder="Confirm Password"
+                                placeholderTextColor="black"
                                 secureTextEntry={!showPassword}
                                 value={confPassword}
                                 onChangeText={setConfPassword}
@@ -204,6 +208,7 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         height: 40,
+        color: "black"
     },
     inputGroup: {
         flexDirection: "row",
