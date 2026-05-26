@@ -16,6 +16,7 @@ import {
 
 import {
     createUserWithEmailAndPassword,
+    sendEmailVerification,
     sendPasswordResetEmail,
     signInWithEmailAndPassword,
     signOut,
@@ -283,6 +284,17 @@ const handleLogin = async (method: string, paths: string[], body: JsonBody) => {
             return jsonResponse({ message: getAuthErrorMessage(error) }, 401);
         }
 
+        if (!auth.currentUser?.emailVerified) {
+            await signOut(auth);
+            return jsonResponse(
+                {
+                    message:
+                        "Email belum diverifikasi. Silakan cek email verifikasi terlebih dahulu.",
+                },
+                403,
+            );
+        }
+
         const userSnap = await findUserByEmail(body.email);
 
         if (!userSnap) {
@@ -369,6 +381,7 @@ const handleUsers = async (method: string, paths: string[], body: JsonBody) => {
                 String(body.email),
                 String(body.password),
             );
+            await sendEmailVerification(credential.user);
         } catch (error) {
             return jsonResponse({ msg: getAuthErrorMessage(error) }, 400);
         }
@@ -387,7 +400,12 @@ const handleUsers = async (method: string, paths: string[], body: JsonBody) => {
             await signOut(auth);
         }
 
-        return jsonResponse({ msg: "Register berhasil" }, 201);
+        return jsonResponse(
+            {
+                msg: "Register berhasil. Link verifikasi telah dikirim ke email Anda.",
+            },
+            201,
+        );
     }
 
     if (paths.length === 2) {

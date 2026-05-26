@@ -42,7 +42,7 @@ const RegisterPage: React.FC<props> = ({ navigation }) => {
                     email: email,
                     username: username,
                     password: password,
-                    role: "kasir",
+                    role: "user",
                     confPassword: confPassword,
                     logoutAfterRegister: true,
                 }),
@@ -52,8 +52,7 @@ const RegisterPage: React.FC<props> = ({ navigation }) => {
             if (!response.ok) {
                 setError(json.msg ?? "Registrasi gagal.");
             } else {
-                alert("Berhasil membuat akun");
-                navigation.navigate("LoginPage");
+                alert(json.msg ?? "Berhasil membuat akun");
             }
         } else {
             setError("Isi dengan lengkap!");
