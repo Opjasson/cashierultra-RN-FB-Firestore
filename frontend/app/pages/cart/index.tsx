@@ -425,7 +425,7 @@ const Cart: React.FC<props> = ({ navigation }) => {
                     />
 
                     <TextInput
-                        style={styles.cashInput}
+                        style={user !== "user" ? styles.cashInput : {display: "none"}}
                         keyboardType="number-pad"
                         placeholder="Cash"
                         placeholderTextColor="black"
